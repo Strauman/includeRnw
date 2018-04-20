@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 2
+%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 3
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -24,38 +24,48 @@
 \def\insp#1{\texttt{\string#1:\meaning#1}}
 \def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
 \def\@dlog#1{\@latex@warning{#1}}
-\def\rnw@filename@parse#1{ \filename@parse{#1}
+\def\rnw@filename@parse#1{%
+ \filename@parse{#1}
  \edef\rnw@filepath{\filename@area\filename@base}
  \edef\rnw@filebase{\filename@base}
  \edef\rnw@fileext{\ifx\filename@ext\relax Rnw\else\filename@ext\fi}
  \edef\rnw@filefullpath{\filename@area\filename@base.\filename@ext}
 }
-\def\rnw@clear@knitlog{\immediate\write18{echo "" > \rnw@file@knitlog}
+\def\rnw@clear@knitlog{%
+\immediate\write18{echo "" > \rnw@file@knitlog}
 }
 \def\rnw@check@ouput@file{\rnw@dir@output/.includeRnwShellEscapeCheck}
-\def\check@shell@escape{  \ifcase\pdf@shellescape%
-  \PackageError{includeRnw}{\string\includeRnw requires --shell-escape}\or
-  \message{Shell escape test passed}\or
-  \string\includeRnw requires --shell-escape. Current is restricted\fi
+\def\check@shell@escape{%
+  \ifcase\pdf@shellescape%
+  \PackageError{includeRnw}{\string\includeRnw requires --shell-escape}\or%
+  \message{Shell escape test passed}\or%
+  \string\includeRnw requires --shell-escape. Current is restricted\fi%
 }
-\def\check@output@dir{  \immediate\write18{touch \rnw@check@ouput@file}
-  \IfFileExists{\rnw@check@ouput@file}{}{    \immediate\write18{mkdir \rnw@dir@output}
+\def\check@output@dir{%
+  \immediate\write18{touch \rnw@check@ouput@file}
+  \IfFileExists{\rnw@check@ouput@file}{}{%
+    \immediate\write18{mkdir \rnw@dir@output}
 }
   \immediate\write18{rm \rnw@check@ouput@file}
 }
-\def\rnw@include@knithead{  \IfFileExists{\rnw@filebase@knithead.tex}{}{    \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
+\def\rnw@include@knithead{%
+  \IfFileExists{\rnw@filebase@knithead.tex}{}{%
+    \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
     \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' &> \rnw@file@knitlog}
 }
   \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
-\providecommand\rnw@execute@knitr[2][]{  \def\optarg{#1}
+\providecommand\rnw@execute@knitr[2][]{%
+  \def\optarg{#1}
   \def\haltstring{h}
   \rnw@filename@parse{#2}
-  \ifnum\pdfstrcmp{\optarg}{\haltstring}=\z@\else
+  \ifnum\pdfstrcmp{\optarg}{\haltstring}=\z@\else%
     \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
   \fi
-  \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{    \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
-}{    \@latex@warning{includeRnw: Couldn't find knitted file: \rnw@dir@output/\filename@base\rnw@suffix.tex}
+  \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{%
+    \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
+}{%
+    \@latex@warning{includeRnw: Couldn't find knitted file: \rnw@dir@output/\filename@base\rnw@suffix.tex}
 }
 }
 \check@shell@escape
