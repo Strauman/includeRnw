@@ -1,5 +1,6 @@
 # includeRnw
-@@VERSION @@DATE
+@@VERSION @@DATE - build @@BUILD
+
 Usage:
 Download includeRnw.zip:
 
