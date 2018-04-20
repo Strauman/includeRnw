@@ -14,4 +14,6 @@ Download includeRnw.zip:
 ```
 
 You can send the `h`-option to prevent it from building the Rnw, and only including the already knitted file:
-`\includeRnw[h]{/path/to/file.Rnw}`
+```
+\includeRnw[h]{/path/to/file.Rnw}
+```
