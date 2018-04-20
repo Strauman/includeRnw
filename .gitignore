@@ -223,3 +223,6 @@ TSWLatexianTemp*
 packaging
 !src/packaging
 main.pdf
+!docs/commands.log
+docs/includeRnw-doc.pdf
+docs/includeRnw-doc.tex
