@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 3
+%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 1
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -49,8 +49,12 @@
 }
   \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
-\providecommand\rnw@execute@knitr[1]{  \rnw@filename@parse{#1}
-  \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath", "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+\providecommand\rnw@execute@knitr[2][]{  \def\optarg{#1}
+  \def\haltstring{h}
+  \rnw@filename@parse{#2}
+  \ifnum\pdfstrcmp{\optarg}{\haltstring}=\z@\else
+    \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+  \fi
   \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{    \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
 }{    \@latex@warning{includeRnw: Couldn't find knitted file: \rnw@dir@output/\filename@base\rnw@suffix.tex}
 }

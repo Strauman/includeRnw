@@ -1,2 +1,2 @@
 #----testing
-x=seq(0,10)
+y=seq(0,10)

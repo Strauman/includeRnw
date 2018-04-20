@@ -49,10 +49,15 @@
   \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{@@PACKAGE}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
 % \rnw@execute@knitr{path/to/file.Rnw}. .Rnw can be omitted
-\providecommand\rnw@execute@knitr[1]{
+\providecommand\rnw@execute@knitr[2][]{
+  \def\optarg{#1}
+  \def\haltstring{h}
   % Set filename structure
-  \rnw@filename@parse{#1}
-  \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath", "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+  \rnw@filename@parse{#2}
+  % only run if \haltstring not given
+  \ifnum\pdfstrcmp{\optarg}{\haltstring}=\z@\else
+    \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+  \fi
   \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{
     \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
   }{
@@ -65,3 +70,8 @@
 \let\includeRnw\rnw@execute@knitr
 \rnw@include@knithead
 \makeatletter
+%:=\includeRnw[h]{path/to/file.Rnw}
+%:Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
+%:from the command line. Use the \oarg{h} to prevent \includeRnw from
+%:actually knitting the file, but only include the knitted \!texttt{.tex} file
+%:-
