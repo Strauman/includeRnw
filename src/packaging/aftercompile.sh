@@ -55,6 +55,7 @@ readme_tree
 make_github_readme
 finalize_paths
 run_tests "basic.tex"
+cp $pkgSTY $mainDir;
 
 echo "v${version}"
 echo "b${build}"

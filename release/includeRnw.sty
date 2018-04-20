@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 1
+%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 2
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -14,7 +14,6 @@
 %% This work has the LPPL maintenance status `author-maintained'.
 %% This work consists of all files listed in README
 \ProvidesPackage{includeRnw}[2018/04/20 v0.0.1 Makes commands for including external .Rnw files.]
-\clearpage{}%
 \RequirePackage{pdftexcmds}
 \let\incl\input
 \def\rnw@dir@input{.}
@@ -64,4 +63,3 @@
 \rnw@clear@knitlog
 \let\includeRnw\rnw@execute@knitr
 \rnw@include@knithead
-\clearpage{}%
