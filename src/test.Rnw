@@ -1,0 +1,11 @@
+%!TEX root = main.tex
+<<echo=F>>=
+options(digits = 5)
+@
+<<testChunk, echo=F, cache=F >>=
+  read_chunk('test.r')
+  set.seed(128)
+  opts_chunk$set(tidy=T, tidy.opts=list(blank=T, width.cutoff=60), fig.width=6, fig.height=6,out.width="0.65\\textwidth", out.height="0.65\\textwidth", fig.align="center", fig.pos="H", dev='tikz', cache=F, cache.rebuild=F)
+@
+<<testing>>=
+@

@@ -1,0 +1,67 @@
+%!TEX root = main.tex
+\RequirePackage{pdftexcmds}
+\makeatletter
+\let\incl\input
+\def\rnw@dir@input{.}
+\def\rnw@dir@output{./knitrout}
+\def\rnw@suffix{knitted}
+\def\rnw@file@knitlog{\rnw@dir@output/knitlog.log}
+\def\rnw@filebase@knithead{\rnw@dir@output/knithead}
+
+\def\insp#1{\texttt{\string#1:\meaning#1}}
+\def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
+\def\@dlog#1{\@latex@warning{#1}}
+
+\def\rnw@filename@parse#1{
+ \filename@parse{#1}
+ \edef\rnw@filepath{\filename@area\filename@base}
+ \edef\rnw@filebase{\filename@base}
+ \edef\rnw@fileext{\ifx\filename@ext\relax Rnw\else\filename@ext\fi}
+ \edef\rnw@filefullpath{\filename@area\filename@base.\filename@ext}
+}
+\def\rnw@clear@knitlog{
+\immediate\write18{echo "" > \rnw@file@knitlog}
+}
+\def\rnw@check@ouput@file{\rnw@dir@output/.includeRnwShellEscapeCheck}
+\def\check@shell@escape{
+  \ifcase\pdf@shellescape%
+  \PackageError{@@PACKAGE}{\string\includeRnw requires --shell-escape}\or
+  \message{Shell escape test passed}\or
+  \string\includeRnw requires --shell-escape. Current is restricted\fi
+}
+\def\check@output@dir{
+  \immediate\write18{touch \rnw@check@ouput@file}
+  \IfFileExists{\rnw@check@ouput@file}{}{
+    % Create output dir if not exists
+    \immediate\write18{mkdir \rnw@dir@output}
+  }
+  \immediate\write18{rm \rnw@check@ouput@file}
+}
+
+\def\rnw@include@knithead{
+  % Only make the file if the knitr header does not exist
+  \IfFileExists{\rnw@filebase@knithead.tex}{}{
+    % MakeRnwFile for generating knithead
+    \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
+    %Build texfile via knitr for preamble
+    \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' &> \rnw@file@knitlog}
+  }
+  \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{@@PACKAGE}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
+}
+% \rnw@execute@knitr{path/to/file.Rnw}. .Rnw can be omitted
+\providecommand\rnw@execute@knitr[1]{
+  % Set filename structure
+  \rnw@filename@parse{#1}
+  \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath", "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+  \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{
+    \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
+  }{
+    \@latex@warning{includeRnw: Couldn't find knitted file: \rnw@dir@output/\filename@base\rnw@suffix.tex}
+  }
+}
+\check@shell@escape
+\check@output@dir
+\rnw@clear@knitlog
+\let\includeRnw\rnw@execute@knitr
+\rnw@include@knithead
+\makeatletter
