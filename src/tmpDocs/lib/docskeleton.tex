@@ -23,11 +23,48 @@
 \input{preamble}
 \def\l@macro#1#2{#1\hfill\newline}
 \newcommand\macrotable{\hypersetup{linkcolor=black}\@starttoc{mac}\hypersetup{linkcolor=Definition}}
+
+% --- CHANGELOG TABLE --- %
+\newcommand*\l@version[2]{%
+  \ifnum \c@tocdepth >\z@
+    \addpenalty\@secpenalty
+    \addvspace{1.0em \@plus\p@}%
+    \setlength\@tempdima{1.5em}%
+    \begingroup
+      \parindent \z@ \rightskip \@pnumwidth
+      \parfillskip -\@pnumwidth
+      \leavevmode \bfseries
+      \advance\leftskip\@tempdima
+      \hskip -\leftskip
+      #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{}\par
+    \endgroup
+  \fi}
+  \newcommand*\l@change[2]{%
+    \ifnum \c@tocdepth >\z@
+      \addpenalty\@secpenalty
+      \addvspace{0.5em \@plus\p@}%
+      \setlength\@tempdima{1.5em}%
+      \begingroup
+        \parindent 1.5em \rightskip \@pnumwidth
+        \parfillskip -\@pnumwidth
+        \leavevmode
+        \advance\leftskip\@tempdima
+        \hskip -\leftskip
+        --\ #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{#2}\par
+      \endgroup
+    \fi}
+
+\newcommand\chlogtable{\begin{NoHyper}\@starttoc{chlog}\hypersetup{final}\end{NoHyper}}
+\def\newversion#1{\addcontentsline{chlog}{version}{#1}}
+\newcommand\change[2][]{\addtocontents{chlog}{\protect\contentsline{change}{#2}{#1}{section.\thepage}}}
+% --- /CHANGELOG TABLE --- %
+
 \let\oldTOC\tableofcontents
 \renewcommand\tableofcontents{\hypersetup{linkcolor=black}\oldTOC\hypersetup{linkcolor=Definition}}
 \reversemarginpar
 \def\updated#1{\tcbdocmarginnote{\bfseries{\color{blue}U}#1}}
 \def\defnew#1{\tcbdocmarginnote{\bfseries{\color{green}N}#1}}
+
 \makeatother
 \let\dac\docAuxCommand
 \long\def\keyDef#1#2#3#4{\begin{docKey}{#1}{=\meta{#2}}{\meta{default}=#3}#4\end{docKey}}

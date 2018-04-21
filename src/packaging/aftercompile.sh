@@ -9,21 +9,6 @@ do
   shift
 done
 }
-function run_tests(){
-  testDir="$sourceDir/testing";
-  tmpTestDir="$sourceDir/tmpTesting";
-  rm -r $tmpTestDir;
-  mkdir $tmpTestDir;
-  cd $tmpTestDir
-  cp_to_dir $tmpTestDir "$sourceDir/test.Rnw" "$sourceDir/test.r" $pkgSTY
-while [[ $# -gt 0 ]]
-do
-  cp "$testDir/$1" "$tmpTestDir/$1";
-  outHandle "Error in testing: $1" latexmk -pdf "$1" -outdir="./bin" --shell-escape -interaction=nonstopmode -f
-  shift
-done
-rm -r $tmpTestDir;
-}
 function make_github_readme(){
   rm "$mainDir/README.md.bak"
   mv "$mainDir/README.md" "$mainDir/README.md.bak"
@@ -54,7 +39,6 @@ rm -rf "$mainDir/$packagename/"
 readme_tree
 make_github_readme
 finalize_paths
-run_tests "basic.tex"
 cp $pkgSTY $mainDir;
 
 echo "v${version}"

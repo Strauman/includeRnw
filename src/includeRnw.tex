@@ -11,7 +11,7 @@
 %:then \includeRnw{my/file.Rnw} will \emph{not} run knitr on it.
 %:However, if the knitted file exists, it will include this. You can
 %:override this with the f-option in the \refCom{includeRnw}:
-%:\includeRnw[f]{my/file.Rnw}}
+%:\includeRnw[f]\brackets{my/file.Rnw}}
 %:\optDef{new}{This option would make the \refCom{includeRnw} only
 %:run knitr on the file if the knitted file does not exist.
 %:}
@@ -67,9 +67,9 @@
 
 \def\check@shell@escape{%
   \ifcase\pdf@shellescape%
-  \PackageError{@@PACKAGE}{\string\includeRnw requires --shell-escape}\or%
+  \PackageError{@@PACKAGE}{\string\includeRnw\space requires --shell-escape}{}\stop\or%
   \message{Shell escape test passed}\or%
-  \string\includeRnw requires --shell-escape. Current is restricted\fi%
+  \PackageError{@@PACKAGE}{\string\includeRnw\space requires --shell-escape. Current is restricted shell escape}{}\stop\fi%
 }
 
 \def\check@output@dir{%
@@ -164,8 +164,21 @@
 \rnw@include@knithead
 \makeatletter
 %:§qs
-%:=\includeRnw[h]{path/to/file.Rnw}
+%:!\documentclass{article}
+%:!\usepackage{includeRnw}
+%:!\begin{document}
+%:!  \includeRnw{path/to/my.Rnw}
+%:!\end{document}
+%:-
+%:\!begin{marker}
+%:Path to \texttt{r}-files are relative to the path of the \texttt{.Rnw}-file
+%:\!end{marker}
+%:=\includeRnw[irw-options]{path/to/file.Rnw}
 %:Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
-%:from the command line. Use the \oarg{h} to prevent \includeRnw from
-%:actually knitting the file, but only include the knitted \!texttt{.tex} file
+%:from the command line.
+%:\!subsubsection*{The irw-options:}
+%:\optDef{h}{Use the \keyRef{h} to prevent \includeRnw from
+%:actually knitting the file, but only include the knitted \!texttt{.tex} file}
+%:\optDef{f}{\keyRef{f} forces \includeRnw to actually knitting the file no matter,
+%: what (as long as it exists).}
 %:-

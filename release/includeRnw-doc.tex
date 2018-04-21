@@ -1,5 +1,5 @@
-%% includeRnw v0.0.1b3 - 2018/04/21
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/21) build 3
+%% includeRnw v0.0.2b7 - 2018/04/21
+%% The LaTeX package includeRnw - version v0.0.2 (2018/04/21) build 7
 %% Manual/Documentation for includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman
@@ -13,10 +13,11 @@
 %% version 2008/05/04 or later.
 %% This work has the LPPL maintenance status `author-maintained'.
 %% This work consists of all files listed in README.txt
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage[all]{tcolorbox}
 \usepackage{needspace}
 \usepackage{tabularx}
+\usepackage{geometry}
 \makeatletter
 \def\input@path{{../../docs/}}
 \lstdefinestyle{mydocumentation}{style=tcbdocumentation,
@@ -44,11 +45,46 @@
     drop fuzzy shadow,#1}
   \def\l@macro#1#2{#1\hfill\newline}
 \newcommand\macrotable{\hypersetup{linkcolor=black}\@starttoc{mac}\hypersetup{linkcolor=Definition}}
+% --- CHANGELOG TABLE --- %
+\newcommand*\l@version[2]{%
+  \ifnum \c@tocdepth >\z@
+    \addpenalty\@secpenalty
+    \addvspace{1.0em \@plus\p@}%
+    \setlength\@tempdima{1.5em}%
+    \begingroup
+      \parindent \z@ \rightskip \@pnumwidth
+      \parfillskip -\@pnumwidth
+      \leavevmode \bfseries
+      \advance\leftskip\@tempdima
+      \hskip -\leftskip
+      #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{}\par
+    \endgroup
+  \fi}
+  \newcommand*\contentschange[2]{
+    \addvspace{0.5em \@plus\p@}%
+    \begin{minipage}{.59\textwidth}%
+    \advance\leftskip1.5em--#1%
+    \end{minipage}\hfill%
+    \begin{minipage}{.35\textwidth}%
+    #2%
+    \end{minipage}\par
+  }
+
+\newcommand\chlogtable{\begin{NoHyper}\@starttoc{chlog}\hypersetup{final}\end{NoHyper}}
+\def\newversion#1{\addcontentsline{chlog}{version}{#1}}
+\newcommand\change[2][]{\addtocontents{chlog}{\protect\contentschange{#2}{#1}}}
+%% Changelog github credit
+\def\gh#1{\nobreak{by\nobreak\ \nobreak\href{https://github.com/#1}{#1}}\newline{\nobreak\url{https://github.com/#1}}}
+\newlength{\lrmargin}
+\setlength{\lrmargin}{0.5cm}
+% --- /CHANGELOG TABLE --- %
+
 \let\oldTOC\tableofcontents
 \renewcommand\tableofcontents{\hypersetup{linkcolor=black}\oldTOC\hypersetup{linkcolor=Definition}}
 \reversemarginpar
 \def\updated#1{\tcbdocmarginnote{\bfseries{\color{blue}U}#1}}
 \def\defnew#1{\tcbdocmarginnote{\bfseries{\color{green}N}#1}}
+
 \makeatother
 \let\dac\docAuxCommand
 \long\def\keyDef#1#2#3#4{\begin{docKey}{#1}{=\meta{#2}}{\meta{default}=#3}#4\end{docKey}}
@@ -67,22 +103,39 @@
 
 
 \setlength{\parindent}{0pt}
-\title{{includeRnw - manual\\ v0.0.1{\\[-0.5em]\footnotesize(build 3)}}}
+\title{{includeRnw - manual\\ v0.0.2{\\[-0.5em]\footnotesize(build 7)}}}
 \author{Andreas Strauman}
 \begin{document}
 \maketitle
+This package is for including \texttt{.Rnw}-files in normal \texttt{.tex}-files.
+It invokes the command \texttt{R} from your command line.\\
  
 If you found any bugs or want new functionality, to contribute, view the commented source, get latest version of this package or get in touch with me, you can do all of that at \url{https://github.com/Strauman/includeRnw/}. If you have questions of functionality, kindly direct them to the community\\ \url{http://tex.stackexchange.com}. The author is active on this site regularly.
 
 \tableofcontents
 \clearpage
+This package is for including 
  \section{Reference}
 \filbreak\subsection{Quick start}
-\begin{docCommand}{includeRnw}{\oarg{h}\marg{path/to/file.Rnw}}\addcontentsline{toc}{subsubsection}{\refCom{includeRnw}}
-\defnew{v0.0.1\\2018/04/20 }
+\begin{dispListing}
+\documentclass{article}
+\usepackage{includeRnw}
+\begin{document}
+  \includeRnw{path/to/my.Rnw}
+\end{document}
+\end{dispListing}
+\begin{marker}
+Path to \texttt{r}-files are relative to the path of the \texttt{.Rnw}-file
+\end{marker}
+\begin{docCommand}{includeRnw}{\oarg{irw-options}\marg{path/to/file.Rnw}}\addcontentsline{toc}{subsubsection}{\refCom{includeRnw}}
+
 Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
-from the command line. Use the \oarg{h} to prevent \dac{includeRnw} from
-actually knitting the file, but only include the knitted \texttt{.tex} file
+from the command line.
+\subsubsection*{The irw-options:}
+\optDef{h}{Use the \dac{keyRef}\{h\} to prevent \dac{includeRnw} from
+actually knitting the file, but only include the knitted \texttt{.tex} file}
+\optDef{f}{\dac{keyRef}\{f\} forces \dac{includeRnw} to actually knitting the file no matter,
+ what (as long as it exists).}
 \end{docCommand}
 \filbreak\subsection{Package Options}
 \dac{usepackage}[\oarg{options}] where the \meta{options} are:\\
@@ -90,11 +143,16 @@ actually knitting the file, but only include the knitted \texttt{.tex} file
 then \dac{includeRnw}\{my/file.Rnw\} will \emph{not} run knitr on it.
 However, if the knitted file exists, it will include this. You can
 override this with the f-option in the \refCom{includeRnw}:
-\dac{includeRnw}[f]{my/file.Rnw}}
+\dac{includeRnw}[f]\brackets{my/file.Rnw}}
 \optDef{new}{This option would make the \refCom{includeRnw} only
 run knitr on the file if the knitted file does not exist.
 }
 
+\newgeometry{lmargin=\the\dimexpr0.2in+0.5cm\relax,rmargin=0.5cm}
 \section{Changelog}
-v0.0.1 2018/04/20 Created the package
+\newversion{v0.0.1 2018/04/20}
+\change{Created the package}
+\newversion{v0.0.2 2018/04/21}
+\change{Fixed wrong error message on no shell-escape}
+\chlogtable
  \end{document}

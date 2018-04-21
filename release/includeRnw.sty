@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/21) - build 3
+%% The LaTeX package includeRnw - version v0.0.2 (2018/04/21) - build 7
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -13,7 +13,8 @@
 %% version 2008/05/04 or later.
 %% This work has the LPPL maintenance status `author-maintained'.
 %% This work consists of all files listed in README
-\ProvidesPackage{includeRnw}[2018/04/21 v0.0.1 Makes commands for including external .Rnw files.]
+\ProvidesPackage{includeRnw}[2018/04/21 v0.0.2 Makes commands for including external .Rnw files.]
+\providecommand\rnw@loglevel{0}
 \RequirePackage{pdftexcmds}
 \let\incl\input
 \def\rnw@True{1}
@@ -36,13 +37,14 @@
 \def\rnw@filebase@knithead{\rnw@dir@output/knithead}
 \def\insp#1{\texttt{\string#1:\meaning#1}}
 \def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
-\def\@dlog#1{\@latex@warning{#1}}
+\providecommand\rnw@loglevel{3}
+\newcommand\@dlog[2][1]{\ifnum\rnw@loglevel>#1\relax\@latex@warning{#2}\fi}
 \def\rnw@filename@parse#1{%
  \filename@parse{#1}
  \edef\rnw@filepath{\filename@area\filename@base}
  \edef\rnw@filebase{\filename@base}
  \edef\rnw@fileext{\ifx\filename@ext\relax Rnw\else\filename@ext\fi}
- \edef\rnw@filefullpath{\filename@area\filename@base.\filename@ext}
+ \edef\rnw@infile@fullpath{\filename@area\filename@base.\filename@ext}
 }
 \def\rnw@clear@knitlog{%
 \immediate\write18{echo "" > \rnw@file@knitlog}
@@ -50,9 +52,9 @@
 \def\rnw@check@ouput@file{\rnw@dir@output/.includeRnwShellEscapeCheck}
 \def\check@shell@escape{%
   \ifcase\pdf@shellescape%
-  \PackageError{includeRnw}{\string\includeRnw requires --shell-escape}\or%
+  \PackageError{includeRnw}{\string\includeRnw\space requires --shell-escape}{}\stop\or%
   \message{Shell escape test passed}\or%
-  \string\includeRnw requires --shell-escape. Current is restricted\fi%
+  \PackageError{includeRnw}{\string\includeRnw\space requires --shell-escape. Current is restricted shell escape}{}\stop\fi%
 }
 \def\check@output@dir{%
   \immediate\write18{touch \rnw@check@ouput@file}
@@ -63,15 +65,17 @@
 }
 \def\rnw@include@knithead{%
   \IfFileExists{\rnw@filebase@knithead.tex}{}{%
+    \@dlog[0]{Creating knithead}
     \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
-    \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' &> \rnw@file@knitlog}
+    \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' >> \rnw@file@knitlog}
 }
-  \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
+  \IfFileExists{\rnw@filebase@knithead.tex}{\@dlog[0]{Including knithead}\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
 \xdef\rnw@gopt@force{f}
 \xdef\rnw@gopt@halt{h}
 \def\ifrnw@should@knitr{%
   \newif\ifrnw@build
+  \@dlog[0]{Deciding wether or not to knit \rnw@infile@fullpath:}
   \rnw@buildtrue
   \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt}=\z@%
     \let\rnw@local@halt\rnw@True
@@ -84,6 +88,9 @@
       \let\rnw@local@new\rnw@False
     \fi
   \fi
+  \@dlog[2]{- Options resulted in:}
+  \@dlog[2]{- new: \rnw@local@new}
+  \@dlog[2]{- halt: \rnw@local@halt}
   \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt}=\z@\rnw@buildtrue\else%
     \if\rnw@local@halt\rnw@True%
       \rnw@buildfalse
@@ -102,12 +109,16 @@
   \rnw@filename@parse{#2}
   \xdef\knitOutfile{\rnw@dir@output/\filename@base\rnw@suffix.tex}
   \ifrnw@should@knitr
-    \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+    \IfFileExists{\rnw@infile@fullpath}{      \@dlog[2]{Building \rnw@infile@fullpath\space to \rnw@dir@output/\filename@base\rnw@suffix.tex}
+      \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+}{\@latex@error{includeRnw: Could not find file that I was asked to knit: \rnw@infile@fullpath!}{}\stop}
+  \else\@dlog[2]{- Skipping knit of \rnw@infile@fullpath}
   \fi
   \IfFileExists{\knitOutfile}{%
+    \@dlog[2]{Found \knitOutfile. Including it.}
     \incl{\knitOutfile}
 }{%
-    \@latex@warning{includeRnw: Couldn't find knitted file: \knitOutfile}
+    \PackageError{includeRnw}{Couldn't find knitted file: \knitOutfile}{}
 }
 }
 \check@shell@escape

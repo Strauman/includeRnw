@@ -14,7 +14,7 @@ if [ ! -d "$testDir" ];then
   echo "Failed to find test directory. Are you sure you are in the right directory? src/";
   exit 1;
 fi
-# --- FUNCTIONS --- #
+# --- HELPER FUNCTIONS --- #
 function outHandle(){
   # Usage:
   # outHandle "ERROR-MSG" command with args
@@ -72,8 +72,9 @@ do
   shift
 done
 }
-# Latexpand
-function run_tests(){
+
+#--- TEST FUNCTIONS ---#
+function ready_test_directory(){
   if [ -d "$tmpTestDir" ];then
     rm -r $tmpTestDir;
   fi
@@ -91,6 +92,8 @@ function run_tests(){
   cd $tmpTestDir
   mkdir "pdf/";
   cp_to_dir $tmpTestDir $pkgSTY &> /dev/null
+}
+function run_tests(){
   for texfile in $tmpTestDir/*.tex; do
     rm -rf knitrout > /dev/null;
     filename=${texfile##*/};
@@ -103,9 +106,32 @@ function run_tests(){
     outHandle "Latexmk of $texfile failed" latexmk -pdf "$texfile" -outdir="./bin" --shell-escape -interaction=nonstopmode -f
     cp "bin/$filebase.pdf" ./pdf/;
   done
+}
+function test_shell_escape(){
+  cd $tmpTestDir;
+  rm -rf bin/
+  echo "Trying to build basic.tex without shell-escape"
+  latexmk -pdf "basic.tex" -outdir="./bin" -interaction=nonstopmode &>tmpout
+  exit_code=$?
+  if [ $exit_code -eq 0 ]; then
+    echo "Building without shell-escape didn't fail!";
+    echo "Run:"
+    echo 'latexmk -outdir="./bin" -C; latexmk -pdf "basic.tex" -outdir="./bin"'
+    exit 1;
+  else
+    echo "As expected: building without shell-escape failed";
+    echo "Here are all instances of @@PACKAGE in output";
+    cat tmpout | grep "@@PACKAGE";
+  fi
+  rm tmpout;
+}
+function finalize_result_dir(){
   mkdir code/
   mv * code/ &> /dev/null
   cp code/includeRnw.sty ./
   mv code/pdf ./
 }
+ready_test_directory
 run_tests
+test_shell_escape
+finalize_result_dir

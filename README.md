@@ -1,5 +1,5 @@
 # includeRnw
-v0.0.1 2018/04/21 - build 3
+v0.0.2 2018/04/21 - build 7
 
 Usage:
 Download includeRnw.zip:
