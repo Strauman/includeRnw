@@ -79,24 +79,21 @@ function make_sty(){
   # Make .sty-file
   cat packaging/packagehead.tex > $pkgSTY;
   latexpand --keep-comments --makeatletter texpack.tex >> $pkgSTY;
+  perl -pe "s/(\\\\makeat(?:letter|other))//" -i $pkgSTY
+  perl -pe "s/^\s*%!TEX.*//" -i $pkgSTY
+  cp_to_dir $tmpTestDir $pkgSTY &> /dev/null
 }
 function copy_sty(){
-  cp ../includeRnw.sty $pkgSTY;
+  cp $sourceDir/../includeRnw.sty $pkgSTY;
 }
 function ready_test_directory(){
-  if [ -d "$tmpTestDir" ];then
-    rm -r $tmpTestDir;
-  fi
   # Copy of testing/ directory
   cp -r $testDir $tmpTestDir;
   # We don't need the hooks
   rm -r $tmpTestDir/prehooks &>/dev/null
   rm -r $tmpTestDir/posthooks &>/dev/null
-  perl -pe "s/(\\\\makeat(?:letter|other))//" -i $pkgSTY
-  perl -pe "s/^\s*%!TEX.*//" -i $pkgSTY
   cd $tmpTestDir
   mkdir "pdf/";
-  cp_to_dir $tmpTestDir $pkgSTY &> /dev/null
 }
 function run_tests(){
   for texfile in $tmpTestDir/*.tex; do
@@ -136,8 +133,18 @@ function finalize_result_dir(){
   cp code/includeRnw.sty ./
   mv code/pdf ./
 }
-# make_sty
+if [ -d "$tmpTestDir" ];then
+  rm -r $tmpTestDir;
+fi
+echo "Dir"
 ready_test_directory
+echo "Sty file"
+# make_sty
+copy_sty
+
+echo "Testing"
 run_tests
+echo "ShellEscape"
 test_shell_escape
+echo "Finalising"
 finalize_result_dir

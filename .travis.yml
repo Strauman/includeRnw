@@ -12,15 +12,13 @@ before_install:
 - gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 - gpg -a --export E084DAB9 | sudo apt-key add -
 - sudo apt-get -qq update
-- sudo apt-get install -y --no-install-recommends r-base
+- sudo apt-get install -qq -y --no-install-recommends r-base
 - sudo R -e "install.packages('knitr', repos='https://cloud.r-project.org/')"
 #- sudo apt-get -qq update && sudo apt-get install -y --no-install-recommends texlive-fonts-recommended texlive-latex-extra texlive-fonts-extra dvipng texlive-latex-recommended
 # installing dvipng and texlive
 
 script:
-- cd src/testing/
-- ../latexinstall.pl basic.tex
-- cd ../
+- cd src/
 - ./dotests.sh
 # - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape basic.tex
 # - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape haltCmdOption.tex
