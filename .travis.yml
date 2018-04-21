@@ -7,7 +7,7 @@ before_install:
 - sudo apt-get install -y --no-install-recommends dvipng texlive-latex-recommended latexmk xzdec
 - sudo tlmgr init-usertree
 # - sudo tlmgr option repository ftp://tug.org/historic/systems/texlive/2017/tlnet-final
-- sudo tlmgr update --self
+# - sudo tlmgr update --self
 - sudo add-apt-repository "deb http://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)/"
 - gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 - gpg -a --export E084DAB9 | sudo apt-key add -
