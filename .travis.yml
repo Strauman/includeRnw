@@ -1,1 +1,29 @@
-language: TeX
+sudo: required
+dist: trusty
+before_install:
+# Install R
+- sudo apt-get -qq update
+- echo "INSTALLING TEXLIVE"
+- sudo apt-get install -y --no-install-recommends dvipng texlive-latex-recommended xzdec
+- tlmgr init-usertree
+- sudo tlmgr install latexmk
+- sudo add-apt-repository "deb http://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)/"
+- gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+- gpg -a --export E084DAB9 | sudo apt-key add -
+- sudo apt-get -qq update
+- sudo apt-get install -y --no-install-recommends r-base
+- sudo R -e "install.packages('knitr', repos='https://cloud.r-project.org/')"
+#- sudo apt-get -qq update && sudo apt-get install -y --no-install-recommends texlive-fonts-recommended texlive-latex-extra texlive-fonts-extra dvipng texlive-latex-recommended
+# installing dvipng and texlive
+
+script:
+- cd src/testing
+- cp ../../includeRnw.sty ./
+- mkdir _build
+- ../latexinstall.pl basic.tex
+- cd ../
+- ./dotests.sh
+# - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape basic.tex
+# - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape haltCmdOption.tex
+# - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape haltPackageOption.tex
+# - pdflatex -interaction=nonstopmode -halt-on-error -output-directory _build --shell-escape newPackageOption.tex
