@@ -5,6 +5,7 @@ export testDir="$sourceDir/testing";
 export tmpTestDir="$sourceDir/testresults";
 export prehooksDir="$testDir/prehooks";
 export posthooksDir="$testDir/posthooks";
+export pkgSTY="$tmpTestDir/includeRnw.sty";
 # --- for latexmk logging --- #
 export max_print_line=1000
 export error_line=254
@@ -74,6 +75,14 @@ done
 }
 
 #--- TEST FUNCTIONS ---#
+function make_sty(){
+  # Make .sty-file
+  cat packaging/packagehead.tex > $pkgSTY;
+  latexpand --keep-comments --makeatletter texpack.tex >> $pkgSTY;
+}
+function copy_sty(){
+  cp ../includeRnw.sty $pkgSTY;
+}
 function ready_test_directory(){
   if [ -d "$tmpTestDir" ];then
     rm -r $tmpTestDir;
@@ -83,10 +92,6 @@ function ready_test_directory(){
   # We don't need the hooks
   rm -r $tmpTestDir/prehooks &>/dev/null
   rm -r $tmpTestDir/posthooks &>/dev/null
-  # Make .sty-file
-  export pkgSTY="$tmpTestDir/includeRnw.sty";
-  cat packaging/packagehead.tex > $pkgSTY;
-  latexpand --keep-comments --makeatletter texpack.tex >> $pkgSTY;
   perl -pe "s/(\\\\makeat(?:letter|other))//" -i $pkgSTY
   perl -pe "s/^\s*%!TEX.*//" -i $pkgSTY
   cd $tmpTestDir
@@ -131,6 +136,7 @@ function finalize_result_dir(){
   cp code/includeRnw.sty ./
   mv code/pdf ./
 }
+# make_sty
 ready_test_directory
 run_tests
 test_shell_escape
