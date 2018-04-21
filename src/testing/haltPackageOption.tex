@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage[halt]{includeRnw}
+% Testing halt option.
+% Rnw/testChanged.Rnw exists, however
+% A file knitrout/testChanged.tex is created with the text "ALL GOOD"
+% in prehooks/haltOption1.sh
+\makeatletter
+\begin{document}
+Testing \texttt{halt} package option: How are we doing?\\
+\includeRnw{Rnw/haltOption.Rnw}\\
+How about if I force you? (Forcing is bad, so you should feel bad)\\
+\includeRnw[f]{Rnw/haltOption.Rnw}
+\end{document}

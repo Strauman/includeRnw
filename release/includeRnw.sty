@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) - build 3
+%% The LaTeX package includeRnw - version v0.0.1 (2018/04/21) - build 3
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -13,9 +13,22 @@
 %% version 2008/05/04 or later.
 %% This work has the LPPL maintenance status `author-maintained'.
 %% This work consists of all files listed in README
-\ProvidesPackage{includeRnw}[2018/04/20 v0.0.1 Makes commands for including external .Rnw files.]
+\ProvidesPackage{includeRnw}[2018/04/21 v0.0.1 Makes commands for including external .Rnw files.]
 \RequirePackage{pdftexcmds}
 \let\incl\input
+\def\rnw@True{1}
+\def\rnw@False{0}
+\let\rnw@opt@halt\rnw@False
+\let\rnw@opt@new\rnw@False
+\DeclareOption{halt}{\global\let\rnw@opt@halt\rnw@True}
+\DeclareOption{new}{\global\let\rnw@opt@new\rnw@True}
+\ProcessOptions\relax
+\if\rnw@opt@halt\rnw@True
+  \if\rnw@opt@new\rnw@True
+    \@latex@warning{includeRnw: can't use halt and new together. Falling back to new.}
+    \let\rnw@opt@halt\rnw@False
+  \fi
+\fi
 \def\rnw@dir@input{.}
 \def\rnw@dir@output{./knitrout}
 \def\rnw@suffix{knitted}
@@ -55,17 +68,46 @@
 }
   \IfFileExists{\rnw@filebase@knithead.tex}{\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
+\xdef\rnw@gopt@force{f}
+\xdef\rnw@gopt@halt{h}
+\def\ifrnw@should@knitr{%
+  \newif\ifrnw@build
+  \rnw@buildtrue
+  \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt}=\z@%
+    \let\rnw@local@halt\rnw@True
+  \else%
+    \let\rnw@local@halt\rnw@opt@halt
+  \fi
+  \let\rnw@local@new\rnw@opt@new
+  \if\rnw@opt@new\rnw@True\relax%
+    \if\rnw@local@halt\rnw@True\relax%
+      \let\rnw@local@new\rnw@False
+    \fi
+  \fi
+  \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt}=\z@\rnw@buildtrue\else%
+    \if\rnw@local@halt\rnw@True%
+      \rnw@buildfalse
+    \else
+      \if\rnw@opt@new\rnw@True%
+        \IfFileExists{\knitOutfile}{\rnw@buildfalse}{\rnw@buildtrue}
+        \else
+        \rnw@buildtrue
+      \fi
+    \fi
+  \fi
+\ifrnw@build
+}
 \providecommand\rnw@execute@knitr[2][]{%
-  \def\optarg{#1}
-  \def\haltstring{h}
+  \def\givenopt{#1}
   \rnw@filename@parse{#2}
-  \ifnum\pdfstrcmp{\optarg}{\haltstring}=\z@\else%
+  \xdef\knitOutfile{\rnw@dir@output/\filename@base\rnw@suffix.tex}
+  \ifrnw@should@knitr
     \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@filefullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
   \fi
-  \IfFileExists{\rnw@dir@output/\filename@base\rnw@suffix.tex}{%
-    \incl{\rnw@dir@output/\filename@base\rnw@suffix.tex}
+  \IfFileExists{\knitOutfile}{%
+    \incl{\knitOutfile}
 }{%
-    \@latex@warning{includeRnw: Couldn't find knitted file: \rnw@dir@output/\filename@base\rnw@suffix.tex}
+    \@latex@warning{includeRnw: Couldn't find knitted file: \knitOutfile}
 }
 }
 \check@shell@escape

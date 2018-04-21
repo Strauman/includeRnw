@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage[new]{includeRnw}
+% Testing new option.
+% Rnw/testChanged.Rnw exists, however
+% A file knitrout/testChanged.tex is created with the text "ALL GOOD"
+% in prehooks/haltOption1.sh
+\makeatletter
+\begin{document}
+Testing \texttt{new} package option: How are we doing?\\
+\includeRnw{Rnw/newOption.Rnw}\\
+What about now?\\
+\includeRnw{Rnw/notNew.Rnw}
+\end{document}

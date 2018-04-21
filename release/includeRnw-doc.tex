@@ -1,5 +1,5 @@
-%% includeRnw v0.0.1b3 - 2018/04/20
-%% The LaTeX package includeRnw - version v0.0.1 (2018/04/20) build 3
+%% includeRnw v0.0.1b3 - 2018/04/21
+%% The LaTeX package includeRnw - version v0.0.1 (2018/04/21) build 3
 %% Manual/Documentation for includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman
@@ -52,6 +52,7 @@
 \makeatother
 \let\dac\docAuxCommand
 \long\def\keyDef#1#2#3#4{\begin{docKey}{#1}{=\meta{#2}}{\meta{default}=#3}#4\end{docKey}}
+\long\def\optDef#1#2{\begin{docKey*}{#1}{}{}#2\end{docKey*}}
 \tcbset{documentation listing style=mydocumentation}
 % Magenta HREF style
 \let\oldhref\href
@@ -76,13 +77,23 @@ If you found any bugs or want new functionality, to contribute, view the comment
 \tableofcontents
 \clearpage
  \section{Reference}
-\filbreak\subsection{References}
+\filbreak\subsection{Quick start}
 \begin{docCommand}{includeRnw}{\oarg{h}\marg{path/to/file.Rnw}}\addcontentsline{toc}{subsubsection}{\refCom{includeRnw}}
 \defnew{v0.0.1\\2018/04/20 }
 Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
 from the command line. Use the \oarg{h} to prevent \dac{includeRnw} from
 actually knitting the file, but only include the knitted \texttt{.tex} file
 \end{docCommand}
+\filbreak\subsection{Package Options}
+\dac{usepackage}[\oarg{options}] where the \meta{options} are:\\
+\optDef{halt}{If you do \dac{usepackage}[halt]\brackets{includeRnw},
+then \dac{includeRnw}\{my/file.Rnw\} will \emph{not} run knitr on it.
+However, if the knitted file exists, it will include this. You can
+override this with the f-option in the \refCom{includeRnw}:
+\dac{includeRnw}[f]{my/file.Rnw}}
+\optDef{new}{This option would make the \refCom{includeRnw} only
+run knitr on the file if the knitted file does not exist.
+}
 
 \section{Changelog}
 v0.0.1 2018/04/20 Created the package
