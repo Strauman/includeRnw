@@ -18,9 +18,7 @@ before_install:
 # installing dvipng and texlive
 
 script:
-- cd src/testing
-- cp ../../includeRnw.sty ./
-- mkdir _build
+- cd src/testing/
 - ../latexinstall.pl basic.tex
 - cd ../
 - ./dotests.sh
