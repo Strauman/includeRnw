@@ -5,6 +5,7 @@ before_install:
 - sudo apt-get -qq update
 - echo "INSTALLING TEXLIVE"
 - sudo apt-get install -y --no-install-recommends dvipng texlive-latex-recommended xzdec
+- tlmgr option repository ftp://tug.org/historic/systems/texlive/2017/tlnet-final
 - tlmgr init-usertree
 - sudo tlmgr install latexmk
 - sudo add-apt-repository "deb http://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)/"
