@@ -1,5 +1,5 @@
-%% includeRnw v0.0.2b7 - 2018/04/21
-%% The LaTeX package includeRnw - version v0.0.2 (2018/04/21) build 7
+%% includeRnw v0.0.2b10 - 2018/04/29
+%% The LaTeX package includeRnw - version v0.0.2 (2018/04/29) build 10
 %% Manual/Documentation for includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman
@@ -45,6 +45,7 @@
     drop fuzzy shadow,#1}
   \def\l@macro#1#2{#1\hfill\newline}
 \newcommand\macrotable{\hypersetup{linkcolor=black}\@starttoc{mac}\hypersetup{linkcolor=Definition}}
+\newcommand\gh[1]{\href{#1}{https://github.com/#1}}
 % --- CHANGELOG TABLE --- %
 \newcommand*\l@version[2]{%
   \ifnum \c@tocdepth >\z@
@@ -60,23 +61,15 @@
       #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{}\par
     \endgroup
   \fi}
-  \newcommand*\contentschange[2]{
+  \newcommand*\l@change[2]{%
     \addvspace{0.5em \@plus\p@}%
-    \begin{minipage}{.59\textwidth}%
-    \advance\leftskip1.5em--#1%
-    \end{minipage}\hfill%
-    \begin{minipage}{.35\textwidth}%
-    #2%
-    \end{minipage}\par
+    \leftskip1em--\hspace{0.5em}\begin{minipage}{0.5\textwidth}#1\end{minipage}\hfill%
+    \begin{minipage}{0.3\textwidth}#2\end{minipage}\par%
   }
 
 \newcommand\chlogtable{\begin{NoHyper}\@starttoc{chlog}\hypersetup{final}\end{NoHyper}}
 \def\newversion#1{\addcontentsline{chlog}{version}{#1}}
-\newcommand\change[2][]{\addtocontents{chlog}{\protect\contentschange{#2}{#1}}}
-%% Changelog github credit
-\def\gh#1{\nobreak{by\nobreak\ \nobreak\href{https://github.com/#1}{#1}}\newline{\nobreak\url{https://github.com/#1}}}
-\newlength{\lrmargin}
-\setlength{\lrmargin}{0.5cm}
+\newcommand\change[2][]{\addtocontents{chlog}{\protect\contentsline{change}{#2}{#1}{section.\thepage}}}
 % --- /CHANGELOG TABLE --- %
 
 \let\oldTOC\tableofcontents
@@ -85,8 +78,11 @@
 \def\updated#1{\tcbdocmarginnote{\bfseries{\color{blue}U}#1}}
 \def\defnew#1{\tcbdocmarginnote{\bfseries{\color{green}N}#1}}
 
-\makeatother
 \let\dac\docAuxCommand
+\def\mdac#1{\docAuxCommand{\expandafter\@gobble\string#1}}
+
+\makeatother
+
 \long\def\keyDef#1#2#3#4{\begin{docKey}{#1}{=\meta{#2}}{\meta{default}=#3}#4\end{docKey}}
 \long\def\optDef#1#2{\begin{docKey*}{#1}{}{}#2\end{docKey*}}
 \tcbset{documentation listing style=mydocumentation}
@@ -103,40 +99,41 @@
 
 
 \setlength{\parindent}{0pt}
-\title{{includeRnw - manual\\ v0.0.2{\\[-0.5em]\footnotesize(build 7)}}}
+\title{{includeRnw - manual\\ v0.0.2{\\[-0.5em]\footnotesize(build 10)}}}
 \author{Andreas Strauman}
 \begin{document}
 \maketitle
 This package is for including \texttt{.Rnw}-files in normal \texttt{.tex}-files.
 It invokes the command \texttt{R} from your command line.\\
  
-If you found any bugs or want new functionality, to contribute, view the commented source, get latest version of this package or get in touch with me, you can do all of that at \url{https://github.com/Strauman/includeRnw/}. If you have questions of functionality, kindly direct them to the community\\ \url{http://tex.stackexchange.com}. The author is active on this site regularly.
+If you found any bugs or want new functionality, to contribute, view the commented source, get latest version of this package or get in touch with me, you can do all of that at\\\url{https://github.com/Strauman/includeRnw/}. If you have questions of functionality, kindly direct them to the community\\ \url{http://tex.stackexchange.com}. The author is active on this site regularly.
 
 \tableofcontents
 \clearpage
-This package is for including 
- \section{Reference}
-\filbreak\subsection{Quick start}
+\section{Quick start}
 \begin{dispListing}
-\documentclass{article}
-\usepackage{includeRnw}
-\begin{document}
-  \includeRnw{path/to/my.Rnw}
-\end{document}
+  \documentclass{article}
+  \usepackage{includeRnw}
+  \begin{document}
+    \includeRnw{path/to/my.Rnw}
+  \end{document}
 \end{dispListing}
+
 \begin{marker}
 Path to \texttt{r}-files are relative to the path of the \texttt{.Rnw}-file
 \end{marker}
-\begin{docCommand}{includeRnw}{\oarg{irw-options}\marg{path/to/file.Rnw}}\addcontentsline{toc}{subsubsection}{\refCom{includeRnw}}
-
+ \section{Reference}
+\filbreak\subsection{Reference}
+\begin{docCommand}{includeRnw}{\oarg{irw-options}\marg{path/to/file.Rnw}}
 Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
-from the command line.
-\subsubsection*{The irw-options:}
-\optDef{h}{Use the \dac{keyRef}\{h\} to prevent \dac{includeRnw} from
-actually knitting the file, but only include the knitted \texttt{.tex} file}
-\optDef{f}{\dac{keyRef}\{f\} forces \dac{includeRnw} to actually knitting the file no matter,
- what (as long as it exists).}
+from the command line. It is optional to add the extension \texttt{.Rnw}
 \end{docCommand}
+\filbreak\subsection{Command Options}
+Options to use with \refCom{includeRnw}
+\optDef{h}{Use the \refKey{h} to prevent \dac{includeRnw} from
+actually knitting the file, but only include the knitted \texttt{.tex} file}
+\optDef{f}{\refKey{f} forces \dac{includeRnw} to actually knitting the file no matter,
+what (as long as it exists).}
 \filbreak\subsection{Package Options}
 \dac{usepackage}[\oarg{options}] where the \meta{options} are:\\
 \optDef{halt}{If you do \dac{usepackage}[halt]\brackets{includeRnw},
@@ -147,12 +144,50 @@ override this with the f-option in the \refCom{includeRnw}:
 \optDef{new}{This option would make the \refCom{includeRnw} only
 run knitr on the file if the knitted file does not exist.
 }
+\optDef{noknithead}{
+This option will prevent \dac{includeRnw} from building and including the knitr-preamble.
+}
+\filbreak\subsection{User macros}
+ The default user macro settables are
+\begin{dispListing}
+\rnwInputDirectory{.}
+\rnwKnittedSuffix{knitted}
+\rnwKnitlogFile{\rnw@dir@output/knitlog.log}
+\rnwKnitheadName{\rnw@dir@output/knithead}
+\end{dispListing}
+Where \dac{rnw@dir@output} is the value of the set \dac{rnwOutputDirectory}
+\begin{docCommand}{rnwInputDirectory}{\marg{directory}}
+\defnew{v0.0.2\\2018/04/28 } This command sets what directory \dac{includeRnw} will be using. If you e.g.
+ have all the Rnw-files inside a directory called \texttt{myRnws} then
+ \dac{rnwInputDirectory}\brackets{myRnws} would fix this.
+\end{docCommand}
+\begin{docCommand}{rnwKnittedSuffix}{\marg{text}}
+\defnew{v0.0.2\\2018/04/28 } Set the default suffix of the filename of the knitted output
+\end{docCommand}
+\begin{docCommand}{rnwKnitlogFile}{\marg{filename}}
+\defnew{v0.0.2\\2018/04/28 } Sets the filename of the log output by knitr.
+\end{docCommand}
+\begin{docCommand}{rnwKnitheadName}{\marg{filename}}
+\defnew{v0.0.2\\2018/04/28 } Sets the filename of the preamble generated by knitr.
+\end{docCommand}
+\filbreak\subsection{List of all macros}
 
-\newgeometry{lmargin=\the\dimexpr0.2in+0.5cm\relax,rmargin=0.5cm}
+ \addcontentsline{mac}{macro}{\refCom{includeRnw}}{}
+\addcontentsline{mac}{macro}{\refCom{rnwInputDirectory}}{}
+\addcontentsline{mac}{macro}{\refCom{rnwKnitheadName}}{}
+\addcontentsline{mac}{macro}{\refCom{rnwKnitlogFile}}{}
+\addcontentsline{mac}{macro}{\refCom{rnwKnittedSuffix}}{}
+
+ \macrotable
+
+
+% \newgeometry{lmargin=0.7cm}
 \section{Changelog}
 \newversion{v0.0.1 2018/04/20}
 \change{Created the package}
-\newversion{v0.0.2 2018/04/21}
+\newversion{v0.0.2 2018/04/28}
 \change{Fixed wrong error message on no shell-escape}
+\change{Added macros for setting custom values}
+\change{Added \refKey{noknithead}}
 \chlogtable
  \end{document}

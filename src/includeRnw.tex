@@ -1,11 +1,11 @@
 %!TEX root = main.tex
 \RequirePackage{pdftexcmds}
+\RequirePackage{kvoptions}
 \makeatletter
 \let\incl\input
-\def\rnw@True{1}
-\def\rnw@False{0}
 %% Package options
-%:§opts
+%:!iTOCOff
+%:§popts
 %:\usepackage[\oarg{options}] where the \meta{options} are:\\
 %:\optDef{halt}{If you do \usepackage[halt]\brackets{includeRnw},
 %:then \includeRnw{my/file.Rnw} will \emph{not} run knitr on it.
@@ -15,28 +15,37 @@
 %:\optDef{new}{This option would make the \refCom{includeRnw} only
 %:run knitr on the file if the knitted file does not exist.
 %:}
+%:\optDef{noknithead}{
+%:This option will prevent \includeRnw from building and including the knitr-preamble.
+%:}
 %:-
-% Default values
-\let\rnw@opt@halt\rnw@False
-\let\rnw@opt@new\rnw@False
-% Options
-\DeclareOption{halt}{\global\let\rnw@opt@halt\rnw@True}
-\DeclareOption{new}{\global\let\rnw@opt@new\rnw@True}
-\ProcessOptions\relax
+\RequirePackage{kvoptions}
+\SetupKeyvalOptions{
+ family=includeRnw,
+ prefix=rnw@opt@
+}
+\DeclareBoolOption[true]{build}
+\DeclareComplementaryOption{halt}{build}
+\DeclareBoolOption[false]{new}
+\DeclareBoolOption[true]{knithead}
+\DeclareComplementaryOption{noknithead}{knithead}
+
+
+\ProcessKeyvalOptions*\relax
 % Check if option clash
 % if halt && new
-\if\rnw@opt@halt\rnw@True
-  \if\rnw@opt@new\rnw@True
+\ifrnw@opt@build\else
+  \ifrnw@opt@new
     \@latex@warning{@@PACKAGE: can't use halt and new together. Falling back to new.}
-    \let\rnw@opt@halt\rnw@False
+    \rnw@opt@haltfalse
   \fi
 \fi
 
-\def\rnw@dir@input{.}
-\def\rnw@dir@output{./knitrout}
-\def\rnw@suffix{knitted}
-\def\rnw@file@knitlog{\rnw@dir@output/knitlog.log}
-\def\rnw@filebase@knithead{\rnw@dir@output/knithead}
+\providecommand\rnw@dir@input{.}
+\providecommand\rnw@dir@output{./knitrout}
+\providecommand\rnw@suffix{knitted}
+\providecommand\rnw@file@knitlog{\rnw@dir@output/knitlog.log}
+\providecommand\rnw@filebase@knithead{\rnw@dir@output/knithead}
 
 \def\insp#1{\texttt{\string#1:\meaning#1}}
 \def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
@@ -92,48 +101,44 @@
   }
   \IfFileExists{\rnw@filebase@knithead.tex}{\@dlog[0]{Including knithead}\incl{\rnw@dir@output/knithead.tex}}{\PackageError{@@PACKAGE}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
-% gopt: given opt
-\xdef\rnw@gopt@force{f}
+%% gopt: short for given opt
+%:§copts
+%:Options to use with \refCom{includeRnw}
 \xdef\rnw@gopt@halt{h}
-\def\ifrnw@should@knitr{%
-  \newif\ifrnw@build
-  \@dlog[0]{Deciding wether or not to knit \rnw@infile@fullpath:}
-  \rnw@buildtrue
-  % If given option halt, it overrides the package option
-  \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt}=\z@%
-    \let\rnw@local@halt\rnw@True
-  \else%
-    \let\rnw@local@halt\rnw@opt@halt
-  \fi
-  % If given in combo with the "new", then fallback to halt
-  \let\rnw@local@new\rnw@opt@new
-  \if\rnw@opt@new\rnw@True\relax%
-    \if\rnw@local@halt\rnw@True\relax%
-      % Both halt and new are given. Then halt.
-      \let\rnw@local@new\rnw@False
+%:\optDef{h}{Use the \refKey{h} to prevent \includeRnw from
+%:actually knitting the file, but only include the knitted \!texttt{.tex} file}
+\xdef\rnw@gopt@force{f}
+%:\optDef{f}{\refKey{f} forces \includeRnw to actually knitting the file no matter,
+%:what (as long as it exists).}
+%:-
+\def\ifrnw@should@knitr{
+  \@dlog[0]{Deciding whether to do knitting}
+  \let\ifrnw@local@build\ifrnw@opt@build
+  \newif\ifrnw@doknit
+  \rnw@doknittrue
+  \@dlog[2]{Decision is given option: \givenopt}
+  % Always build on force
+  \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt\relax}=\z@\relax\rnw@doknittrue\@dlog[2]{Focing build}\else%
+    % If given local option halt, it overrides the package option
+    % and acts as oposite of force
+    \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt\relax}=\z@\rnw@doknitfalse\relax\else%
+        % If neither force or halt is given then if new, do
+        % conditionals:
+        \ifrnw@opt@new%
+          % \IfFileExists{\knitOutfile}{\rnw@doknitfalse}{\rnw@doknittrue}
+        \else%
+          % If new not given, then rely on \rnw@opt@build
+          \let\ifrnw@doknit\ifrnw@opt@build\relax%
+        \fi%
     \fi
   \fi
-  \@dlog[2]{- Options resulted in:}
-  \@dlog[2]{- new: \rnw@local@new}
-  \@dlog[2]{- halt: \rnw@local@halt}
-  % Always build if force option is given
-  \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt}=\z@\rnw@buildtrue\else%
-    % if !force
-    \if\rnw@local@halt\rnw@True%
-      % if !force && halt
-      \rnw@buildfalse
-    \else
-      % if !force && !halt
-      \if\rnw@opt@new\rnw@True%
-        % if !force && !halt && new
-        \IfFileExists{\knitOutfile}{\rnw@buildfalse}{\rnw@buildtrue}
-        \else
-        % if !force && !halt && !new
-        \rnw@buildtrue
-      \fi
-    \fi
-  \fi
-\ifrnw@build
+\ifrnw@doknit
+\@dlog[1]{Decided to build}
+}
+
+\def\rnw@purge@outdir{
+  \immediate\write18{rm -rf \rnw@dir@output}
+  \immediate\write18{mkdir \rnw@dir@output}
 }
 % \rnw@execute@knitr{path/to/file.Rnw}. .Rnw can be omitted
 \providecommand\rnw@execute@knitr[2][]{%
@@ -147,7 +152,7 @@
       \@dlog[2]{Building \rnw@infile@fullpath\space to \rnw@dir@output/\filename@base\rnw@suffix.tex}
       \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
     }{\@latex@error{@@PACKAGE: Could not find file that I was asked to knit: \rnw@infile@fullpath!}{}\stop}
-  \else\@dlog[2]{- Skipping knit of \rnw@infile@fullpath}
+  \else \@dlog[2]{- Skipping knit of \rnw@infile@fullpath}
   \fi
   \IfFileExists{\knitOutfile}{%
     \@dlog[2]{Found \knitOutfile. Including it.}
@@ -157,28 +162,66 @@
     \PackageError{includeRnw}{Couldn't find knitted file: \knitOutfile}{}
   }
 }
+%% Usage \rnw@settable{\usercommand}{\internal@commmand}{\actionToDo}
+\newcommand\rnw@settable[3][]{%
+\edef\reserved@R{\expandafter\@gobble\string #2}%
+\@ifundefined\reserved@R%
+  {% Undefined, we're good
+    \gdef#2##1{\gdef#3{##1}#1}
+  }%
+  {% Already defined
+    % Did the user define the \nocommand?
+    \@ifundefined{no\reserved@R}{
+      % If not, we should trow an error
+      \@latex@error{includeRnw: Tried to define \@backslashchar \reserved@R \space, but it's already defined. \MessageBreak If you don't need the command \@backslashchar \reserved@R \space, then just define \string\no\reserved@R\space before you include the includeRnw package: \string\def\string\no\reserved@R{}}{}\stop
+    }{
+      % It's defined, so the user don't need our \reserved@R.
+      % Let's just remind the user that it is defined
+      \@latex@warning{\@backslashchar\reserved@R is not defined by includeRnw since it was already defined someewhere else. Continuing since \string\no\reserved@R is defined.}
+    }
+  }%
+}
+%
+%
+% \let\ea\expandafter
+% \gdef\tst##1{##1}
+% \gdef\rnwInputDirectory##1{\gdef\rnw@dir@input{##1}}
+% \ea\gdef\csname #1\endcsname##1{\ea\gdef\csname #2\endcsname{##1}}
+%---- User commands ----%
+%:§user
+%: The default user macro settables are
+%:!\rnwInputDirectory{.}
+%:!\rnwKnittedSuffix{knitted}
+%:!\rnwKnitlogFile{\rnw@dir@output/knitlog.log}
+%:!\rnwKnitheadName{\rnw@dir@output/knithead}
+%:-
+%:Where \rnw@dir@output is the value of the set \rnwOutputDirectory
+%:=\rnwInputDirectory{directory}
+%: This command sets what directory \includeRnw will be using. If you e.g.
+%: have all the Rnw-files inside a directory called \texttt{myRnws} then
+%: \rnwInputDirectory\brackets{myRnws} would fix this.
+\rnw@settable\rnwInputDirectory\rnw@dir@input
+%:=\rnwKnittedSuffix{text}
+%: Set the default suffix of the filename of the knitted output
+\rnw@settable\rnwKnittedSuffix\rnw@suffix
+%:=\rnwKnitlogFile{filename}
+%: Sets the filename of the log output by knitr.
+\rnw@settable\rnwKnitlogFile\rnw@file@knitlog
+%:=\rnwKnitheadName{filename}
+%: Sets the filename of the preamble generated by knitr.
+\rnw@settable\rnwKnitheadName\rnw@filebase@knithead
+%:-
+%:§ref
+%:=\includeRnw[irw-options]{path/to/file.Rnw}
+%:Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
+%:from the command line. It is optional to add the extension \texttt{.Rnw}
+%:-
+\let\includeRnw\rnw@execute@knitr
+\let\purgeOutDir\rnw@purge@outdir
 \check@shell@escape
 \check@output@dir
 \rnw@clear@knitlog
-\let\includeRnw\rnw@execute@knitr
-\rnw@include@knithead
-\makeatletter
-%:§qs
-%:!\documentclass{article}
-%:!\usepackage{includeRnw}
-%:!\begin{document}
-%:!  \includeRnw{path/to/my.Rnw}
-%:!\end{document}
-%:-
-%:\!begin{marker}
-%:Path to \texttt{r}-files are relative to the path of the \texttt{.Rnw}-file
-%:\!end{marker}
-%:=\includeRnw[irw-options]{path/to/file.Rnw}
-%:Compiles .Rnw-files using R. Assumes that \texttt{R} can be called
-%:from the command line.
-%:\!subsubsection*{The irw-options:}
-%:\optDef{h}{Use the \keyRef{h} to prevent \includeRnw from
-%:actually knitting the file, but only include the knitted \!texttt{.tex} file}
-%:\optDef{f}{\keyRef{f} forces \includeRnw to actually knitting the file no matter,
-%: what (as long as it exists).}
-%:-
+\ifrnw@opt@knithead%
+% Knithead runs \makeatother
+  \rnw@include@knithead\makeatletter
+\fi

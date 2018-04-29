@@ -77,11 +77,12 @@ done
 #--- TEST FUNCTIONS ---#
 function make_sty(){
   # Make .sty-file
+  cd $sourceDir
   cat packaging/packagehead.tex > $pkgSTY;
   latexpand --keep-comments --makeatletter texpack.tex >> $pkgSTY;
   perl -pe "s/(\\\\makeat(?:letter|other))//" -i $pkgSTY
   perl -pe "s/^\s*%!TEX.*//" -i $pkgSTY
-  cp_to_dir $tmpTestDir $pkgSTY &> /dev/null
+  cp_to_dir $tmpTestDir $pkgSTY
 }
 function copy_sty(){
   cp $sourceDir/../includeRnw.sty $pkgSTY;
@@ -96,6 +97,7 @@ function ready_test_directory(){
   mkdir "pdf/";
 }
 function run_tests(){
+  cd $tmpTestDir;
   for texfile in $tmpTestDir/*.tex; do
     rm -rf knitrout > /dev/null;
     filename=${texfile##*/};
@@ -107,6 +109,7 @@ function run_tests(){
     fi
     outHandle "Latexmk of $texfile failed" latexmk -pdf "$texfile" -outdir="./bin" --shell-escape -interaction=nonstopmode -f
     cp "bin/$filebase.pdf" ./pdf/;
+    rm -rf bin/
   done
 }
 function test_shell_escape(){
@@ -139,8 +142,9 @@ fi
 echo "Dir"
 ready_test_directory
 echo "Sty file"
-# make_sty
-copy_sty
+make_sty
+sleep 1;
+# copy_sty
 
 echo "Testing"
 run_tests

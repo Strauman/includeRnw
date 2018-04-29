@@ -6,6 +6,17 @@ Makes commands for including external .Rnw files.
 ├── includeRnw-doc.tex
 └── includeRnw.sty
 
+Not tested on Windows!
+
+Quick start:
+
+\documentclass{article}
+\usepackage{includeRnw}
+\begin{document}
+  \includeRnw{path/to/my.Rnw}
+\end{document}
+
+
 Author: Storvik Strauman, Andreas
 
 For bug report, inquires, contributed or anything else:
@@ -13,7 +24,7 @@ https://github.com/Strauman/includeRnw/
 
 Licence:
 
-The LaTeX package includeRnw - version v0.0.2 (2018/04/21) - build 7
+The LaTeX package includeRnw - version v0.0.2 (2018/04/29) - build 10
 includeRnw.sty
 -------------------------------------------------------------------------------------------
 Copyright (c) 2018 by Andreas Storvik Strauman

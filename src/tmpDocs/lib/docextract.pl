@@ -118,7 +118,8 @@ my $pStyleArgs=qr/(?:\[(?<styleArgs>.*?)\])?/;
 my $descCapture=qr/${pPrefix}([^!=§\$].*)/;
 my $pSkipTOC=qr/${pPrefix}\?TOC/;
 my $pInlineTOC=qr/${pPrefix}\!TOC/;
-
+my $piTOCOn=qr/${pPrefix}\!iTOCOn/;
+my $piTOCOff=qr/${pPrefix}\!iTOCOff/;
 # Macros
 my $pMacro=qr/\\(?!EDOC|begin)(?<macroname>[a-zA-Z@]+(?:\*)?)/;
 my $macroDefPattern=qr/^${defPrefix}${pMacro}${pOarg}${pMargs}${pStyleArgs}/;
@@ -156,6 +157,7 @@ my %states = (
 );
 my $skipNextTOC=0;
 my $inlineNextTOC=1;
+my $inlineTOCEnabled=1;
 my %sections = ();
 my %variables= ();
 # subs:
@@ -257,7 +259,7 @@ sub definitions
     $output =~ s/§oargs/$oargs/;
     $output =~ s/§mname/$macroname/;
     if($skipNextTOC==0){
-      if ($inlineNextTOC){
+      if ($inlineNextTOC && $inlineTOCEnabled){
           my $TOCLine = $macroContentLine =~ s/§VAR/$macroname/r;
           $TOCLine =~ s/\\!/\\/g;
           $output .= $TOCLine
@@ -362,7 +364,15 @@ while ($line=<$FILE>){
   if (/^${variablePrefix}/){
     variableHandler();
   }
-  if(/$pInlineTOC/){
+  if (/$piTOCOn/){
+    $inlineTOCEnabled=1;
+    next;
+  }
+  elsif (/$piTOCOff/){
+    $inlineTOCEnabled=0;
+    next;
+  }
+  elsif(/$pInlineTOC/){
     # Should not write next TOC inline
     $inlineNextTOC=0;
     next;

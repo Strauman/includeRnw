@@ -3,6 +3,17 @@ Makes commands for including external .Rnw files.
 
 #FILES
 
+Not tested on Windows!
+
+Quick start:
+
+\documentclass{article}
+\usepackage{includeRnw}
+\begin{document}
+  \includeRnw{path/to/my.Rnw}
+\end{document}
+
+
 Author: Storvik Strauman, Andreas
 
 For bug report, inquires, contributed or anything else:
