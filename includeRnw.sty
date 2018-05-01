@@ -1,5 +1,5 @@
 % Source (with comments) can be found at https://github.com/Strauman/includeRnw/
-%% The LaTeX package includeRnw - version v0.0.2 (2018/04/29) - build 10
+%% The LaTeX package includeRnw - version v0.0.2 (2018/05/01) - build 10
 %% includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman <andreas dot s dot strauman at uit dot no>
@@ -13,21 +13,49 @@
 %% version 2008/05/04 or later.
 %% This work has the LPPL maintenance status `author-maintained'.
 %% This work consists of all files listed in README
-\ProvidesPackage{includeRnw}[2018/04/29 v0.0.2 Makes commands for including external .Rnw files.]
+\ProvidesPackage{includeRnw}[2018/05/01 v0.0.2 Makes commands for including external .Rnw files.]
 \providecommand\rnw@loglevel{0}
+\def\includeRnwVer{10 2018/05/01}
 \RequirePackage{pdftexcmds}
 \RequirePackage{kvoptions}
 \let\incl\input
+\def\insp#1{\texttt{\string#1:\meaning#1}}
+\def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
+\providecommand\rnw@loglevel{3}
+\newcommand\@dlog[2][1]{\ifnum\rnw@loglevel>#1\relax\@latex@warning{#2}\fi}
 \RequirePackage{kvoptions}
 \SetupKeyvalOptions{ family=includeRnw,
  prefix=rnw@opt@
 }
 \DeclareBoolOption[true]{build}
+\DeclareBoolOption[true]{classicenv}
 \DeclareComplementaryOption{halt}{build}
 \DeclareBoolOption[false]{new}
 \DeclareBoolOption[true]{knithead}
 \DeclareComplementaryOption{noknithead}{knithead}
+\DeclareComplementaryOption{texenv}{classicenv}
 \ProcessKeyvalOptions*\relax
+\def\rnw@knitCommand@classic{%
+R -e 'library("knitr");
+knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog
+}%
+\def\rnw@knitCommand@texenv{%
+R -e "library('knitr');
+knit_patterns\string\$set(list(
+chunk.begin = '\doublebs s*\fourbs begin\doublebs{Rnw\doublebs}\doublebs{(.+)\doublebs}',
+chunk.end = '\doublebs s*\fourbs end\doublebs {Rnw\doublebs}',
+inline.code = '\fourbs Sexpr\doublebs{([^{}]+)\doublebs}',
+ref.chunk = '\fourbs rCode\doublebs{([^{}]+)\doublebs}'
+));
+knit('\rnw@dir@input/\rnw@infile@fullpath',  '\rnw@dir@output/\filename@base\rnw@suffix.tex')" &> \rnw@file@knitlog%
+}%
+\ifrnw@opt@classicenv\relax
+\global\let\rnw@knitCommand\rnw@knitCommand@classic
+\@dlog[1]{Using classic environment}
+\else
+\@dlog[1]{Using tex environment}
+\global\let\rnw@knitCommand\rnw@knitCommand@texenv
+\fi
 \ifrnw@opt@build\else
   \ifrnw@opt@new
     \@latex@warning{includeRnw: can't use halt and new together. Falling back to new.}
@@ -39,10 +67,6 @@
 \providecommand\rnw@suffix{knitted}
 \providecommand\rnw@file@knitlog{\rnw@dir@output/knitlog.log}
 \providecommand\rnw@filebase@knithead{\rnw@dir@output/knithead}
-\def\insp#1{\texttt{\string#1:\meaning#1}}
-\def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
-\providecommand\rnw@loglevel{3}
-\newcommand\@dlog[2][1]{\ifnum\rnw@loglevel>#1\relax\@latex@warning{#2}\fi}
 \def\rnw@filename@parse#1{%
  \filename@parse{#1}
  \edef\rnw@filepath{\filename@area\filename@base}
@@ -71,7 +95,6 @@
   \IfFileExists{\rnw@filebase@knithead.tex}{}{%
     \@dlog[0]{Creating knithead}
     \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
-    \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' >> \rnw@file@knitlog}
 }
   \IfFileExists{\rnw@filebase@knithead.tex}{\@dlog[0]{Including knithead}\incl{\rnw@dir@output/knithead.tex}}{\PackageError{includeRnw}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
 }
@@ -82,12 +105,9 @@
   \newif\ifrnw@doknit
   \rnw@doknittrue
   \@dlog[2]{Decision is given option: \givenopt}
-  \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt\relax}=\z@\relax\rnw@doknittrue\@dlog[2]{Focing build}\else%
-    \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt\relax}=\z@\rnw@doknitfalse\relax\else%
-        \ifrnw@opt@new%
-        \else%
-          \let\ifrnw@doknit\ifrnw@opt@build\relax%
-        \fi%
+  \ifnum\pdfstrcmp{\givenopt}{\rnw@gopt@force}=\z@\relax\rnw@doknittrue\@dlog[2]{Focing build}\else%
+    \ifnum\pdfstrcmp{\givenopt}{\rnw@gopt@halt}=\z@
+        \rnw@doknitfalse\relax\@dlog[2]{Halt option given. Not building.}%
     \fi
   \fi
 \ifrnw@doknit
@@ -96,13 +116,20 @@
 \def\rnw@purge@outdir{  \immediate\write18{rm -rf \rnw@dir@output}
   \immediate\write18{mkdir \rnw@dir@output}
 }
+\def\rnw@preKnit{\newtoks\mytoks
+\mytoks{\\}
+\def\bs{\@backslashchar}
+\def\doublebs{\bs\bs\bs\bs\bs}
+\def\fourbs{\doublebs\doublebs\doublebs}
+}
 \providecommand\rnw@execute@knitr[2][]{%
   \def\givenopt{#1}
   \rnw@filename@parse{#2}
   \xdef\knitOutfile{\rnw@dir@output/\filename@base\rnw@suffix.tex}
   \ifrnw@should@knitr
     \IfFileExists{\rnw@infile@fullpath}{      \@dlog[2]{Building \rnw@infile@fullpath\space to \rnw@dir@output/\filename@base\rnw@suffix.tex}
-      \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+      \rnw@preKnit
+      \immediate\write18{\rnw@knitCommand}
 }{\@latex@error{includeRnw: Could not find file that I was asked to knit: \rnw@infile@fullpath!}{}\stop}
   \else \@dlog[2]{- Skipping knit of \rnw@infile@fullpath}
   \fi

@@ -113,7 +113,8 @@ my $descPrefix=qr/${pPrefix}[^!=§\$]/;
 ## Patterns
 my $flushoutPattern=qr/${pPrefix}-/;
 my $pOarg=qr/(?:\[(?<oarg>.*?)\])?/;
-my $pMargs=qr/(?=(?<margs>(?:{[^}]*})*))?/;
+my $pMargs=qr/(?<margs>(\{((?:(?:(?>[^{}]+)|(?-2)))+)\})*)/;
+# my $pMargs=qr/(?=(?<margs>(?:{[^}]*})*))?/;
 my $pStyleArgs=qr/(?:\[(?<styleArgs>.*?)\])?/;
 my $descCapture=qr/${pPrefix}([^!=§\$].*)/;
 my $pSkipTOC=qr/${pPrefix}\?TOC/;
@@ -248,7 +249,8 @@ sub definitions
     my $oargs = $+{oarg};
     my $macroname = $+{macroname};
     my $styleArgs = $+{styleArgs};
-    $margs =~ s/(\{[^\}]*\})/\\marg$1/g;
+    $margs =~ s/(\{((?:(?:(?>[^{}]+)|(?-2)))+)\})/\\marg$1/g;
+    talk "$margs\n";
     if($oargs){
       $oargs = "\\oarg{$oargs}";
     }
@@ -282,7 +284,8 @@ sub definitions
       my $oargs = $+{oarg};
       my $envname = $+{envname};
       my $styleArgs = $+{styleArgs};
-      $margs =~ s/(\{[^\}]*\})/\\marg$1/g;
+      # $margs =~ s/(\{[^\}]*\})/\\marg$1/g;
+      $margs =~ s/(\{((?:(?:(?>[^{}]+)|(?-2)))+)\})/\\marg$1/g;
       if($oargs){
         $oargs = "\\oarg{$oargs}";
       }
