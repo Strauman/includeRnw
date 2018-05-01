@@ -1,5 +1,5 @@
-%% includeRnw v0.0.2b10 - 2018/04/29
-%% The LaTeX package includeRnw - version v0.0.2 (2018/04/29) build 10
+%% includeRnw v0.1.0b11 - 2018/05/01
+%% The LaTeX package includeRnw - version v0.1.0 (2018/05/01) build 11
 %% Manual/Documentation for includeRnw.sty
 %% -------------------------------------------------------------------------------------------
 %% Copyright (c) 2018 by Andreas Storvik Strauman
@@ -99,7 +99,7 @@
 
 
 \setlength{\parindent}{0pt}
-\title{{includeRnw - manual\\ v0.0.2{\\[-0.5em]\footnotesize(build 10)}}}
+\title{{includeRnw - manual\\ v0.1.0{\\[-0.5em]\footnotesize(build 11)}}}
 \author{Andreas Strauman}
 \begin{document}
 \maketitle
@@ -147,6 +147,30 @@ run knitr on the file if the knitted file does not exist.
 \optDef{noknithead}{
 This option will prevent \dac{includeRnw} from building and including the knitr-preamble.
 }
+\optDef{texenv}{
+Using the \texttt{texenv} option disables the default Rnw syntax and allows for a new one. See example below
+}
+ The two following examples do the exact same thing:\\
+ This example use standard Rnw:
+\begin{dispListing}
+\documentclass[a4paper]{article}
+\usepackage{includeRnw}
+\begin{document}
+ <<pChunk, echo=F, cache=F >>=
+   read_chunk('r/myRScript.r')
+ @
+\end{document}
+\end{dispListing}
+The following chunk uses the \refKey{texenv} option:
+\begin{dispListing}
+\documentclass[a4paper]{article}
+\usepackage[texenv]{includeRnw}
+\begin{document}
+ \begin{Rnw}{myChunk, echo=F, cache=F}
+   read_chunk('r/myRScript.r')
+ \end{Rnw}
+\end{document}
+\end{dispListing}
 \filbreak\subsection{User macros}
  The default user macro settables are
 \begin{dispListing}
@@ -189,5 +213,9 @@ Where \dac{rnw@dir@output} is the value of the set \dac{rnwOutputDirectory}
 \change{Fixed wrong error message on no shell-escape}
 \change{Added macros for setting custom values}
 \change{Added \refKey{noknithead}}
+\newversion{v0.1.0 2018/05/01}
+\change{Added \refKey{texenv}}
+\change{Fixed bug where \refKey{new} and \refKey{halt} package options didn't work}
+\change{Fixed bug where \refKey{n}, \refKey{h} and \refKey{f} command options didn't work}
 \chlogtable
  \end{document}

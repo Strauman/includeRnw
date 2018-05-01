@@ -24,7 +24,7 @@ https://github.com/Strauman/includeRnw/
 
 Licence:
 
-The LaTeX package includeRnw - version v0.0.2 (2018/04/29) - build 10
+The LaTeX package includeRnw - version v0.1.0 (2018/05/01) - build 11
 includeRnw.sty
 -------------------------------------------------------------------------------------------
 Copyright (c) 2018 by Andreas Storvik Strauman
