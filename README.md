@@ -2,6 +2,9 @@
 v0.0.2 2018/04/29 - build 10
 
 Usage:
+Included in both TeXLive and MiKTeX.
+`tlmgr install includeRnw`
+
 Download includeRnw.zip:
 
 ```
