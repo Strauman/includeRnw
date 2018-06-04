@@ -1,12 +1,13 @@
 # includeRnw
 v0.0.2 2018/04/29 - build 10
 
-Usage:
+## Installation
 Included in both TeXLive and MiKTeX.
+
 `tlmgr install includeRnw`
-
+### Manual installation
 Download includeRnw.zip:
-
+## Usage
 ```
 \documentclass{article}
 \input{includeRnw}
