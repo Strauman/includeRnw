@@ -3,6 +3,19 @@
 \RequirePackage{kvoptions}
 \makeatletter
 \let\incl\input
+\def\insp#1{\texttt{\string#1:\meaning#1}}
+\def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
+% Log levels:
+% 0: No logging (Should be used in production)
+% 1: overall
+% 2: verbose / info
+% 3: very verbose
+\providecommand\rnw@loglevel{3}
+% dloglevels: log-levels+1
+% 0: overall
+% 1: verbose / info
+% 2: very verbose
+\newcommand\@dlog[2][1]{\ifnum\rnw@loglevel>#1\relax\@latex@warning{#2}\fi}
 %% Package options
 %:!iTOCOff
 %:§popts
@@ -18,20 +31,69 @@
 %:\optDef{noknithead}{
 %:This option will prevent \includeRnw from building and including the knitr-preamble.
 %:}
+%:\optDef{texenv}{
+%:Using the \texttt{texenv} option disables the default Rnw syntax and allows for a new one. See example below
+%:}
+%: The two following examples do the exact same thing:\\
+%: This example use standard Rnw:
+%:!\documentclass[a4paper]{article}
+%:!\usepackage{includeRnw}
+%:!\begin{document}
+%:! <<pChunk, echo=F, cache=F >>=
+%:!   read_chunk('r/myRScript.r')
+%:! @
+%:!\end{document}
+%:The following chunk uses the \refKey{texenv} option:
+%:!\documentclass[a4paper]{article}
+%:!\usepackage[texenv]{includeRnw}
+%:!\begin{document}
+%:! \begin{Rnw}{myChunk, echo=F, cache=F}
+%:!   read_chunk('r/myRScript.r')
+%:! \end{Rnw}
+%:!\end{document}
 %:-
+
 \RequirePackage{kvoptions}
 \SetupKeyvalOptions{
  family=includeRnw,
  prefix=rnw@opt@
 }
 \DeclareBoolOption[true]{build}
+\DeclareBoolOption[true]{classicenv}
 \DeclareComplementaryOption{halt}{build}
 \DeclareBoolOption[false]{new}
 \DeclareBoolOption[true]{knithead}
 \DeclareComplementaryOption{noknithead}{knithead}
-
-
+\DeclareComplementaryOption{texenv}{classicenv}
 \ProcessKeyvalOptions*\relax
+%------ Build commands ------%
+\def\rnw@knitCommand@classic{%
+R -e 'library("knitr");
+knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog
+}%
+\def\rnw@knitCommand@texenv{%
+% echo "knit_patterns\string\$set(list(
+% chunk.begin = '\doublebs s*\fourbs begin\doublebs{Rnw\doublebs}\doublebs{([^{}]+)\doublebs}',
+% chunk.end = '\doublebs s*\fourbs end\doublebs {Rnw\doublebs }'
+% ))" > \rnw@dir@output/test.knit;
+R -e "library('knitr');
+knit_patterns\string\$set(list(
+chunk.begin = '\doublebs s*\fourbs begin\doublebs{Rnw\doublebs}\doublebs{(.+)\doublebs}',
+chunk.end = '\doublebs s*\fourbs end\doublebs {Rnw\doublebs}',
+inline.code = '\fourbs Sexpr\doublebs{([^{}]+)\doublebs}',
+ref.chunk = '\fourbs rCode\doublebs{([^{}]+)\doublebs}'
+));
+knit('\rnw@dir@input/\rnw@infile@fullpath',  '\rnw@dir@output/\filename@base\rnw@suffix.tex')" &> \rnw@file@knitlog%
+}%
+%------ Choosing build commands ------%
+\ifrnw@opt@classicenv\relax
+\global\let\rnw@knitCommand\rnw@knitCommand@classic
+\@dlog[1]{Using classic environment}
+\else
+\@dlog[1]{Using tex environment}
+\global\let\rnw@knitCommand\rnw@knitCommand@texenv
+\fi
+
 % Check if option clash
 % if halt && new
 \ifrnw@opt@build\else
@@ -47,19 +109,7 @@
 \providecommand\rnw@file@knitlog{\rnw@dir@output/knitlog.log}
 \providecommand\rnw@filebase@knithead{\rnw@dir@output/knithead}
 
-\def\insp#1{\texttt{\string#1:\meaning#1}}
-\def\inspw#1{\@latex@warning{\string#1:\meaning#1}}
-% Log levels:
-% 0: No logging (Should be used in production)
-% 1: overall
-% 2: verbose / info
-% 3: very verbose
-\providecommand\rnw@loglevel{3}
-% dloglevels: log-levels+1
-% 0: overall
-% 1: verbose / info
-% 2: very verbose
-\newcommand\@dlog[2][1]{\ifnum\rnw@loglevel>#1\relax\@latex@warning{#2}\fi}
+
 
 \def\rnw@filename@parse#1{%
  \filename@parse{#1}
@@ -97,9 +147,10 @@
     % MakeRnwFile for generating knithead
     \immediate\write18{echo "<<create-preamble,echo=FALSE,results='asis'>>=\string\ncat(knitr:::make_header_latex())\string\n@" > \rnw@filebase@knithead.Rnw}
     %Build texfile via knitr for preamble
-    \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' >> \rnw@file@knitlog}
+    % \immediate\write18{R -e 'library("knitr");knit("\rnw@filebase@knithead.Rnw","\rnw@filebase@knithead.tex")' >> \rnw@file@knitlog}
   }
   \IfFileExists{\rnw@filebase@knithead.tex}{\@dlog[0]{Including knithead}\incl{\rnw@dir@output/knithead.tex}}{\PackageError{@@PACKAGE}{Could not find knitr preamble: \rnw@dir@output/knithead.tex}{}}
+  % \immediate\write18{echo "\string\\\string\rnw@dir@output" >\rnw@dir@output/tst}
 }
 %% gopt: short for given opt
 %:§copts
@@ -118,18 +169,21 @@
   \rnw@doknittrue
   \@dlog[2]{Decision is given option: \givenopt}
   % Always build on force
-  \ifnum\pdfstrcmp{\rnw@gopt@force}{\givenopt\relax}=\z@\relax\rnw@doknittrue\@dlog[2]{Focing build}\else%
+  \ifnum\pdfstrcmp{\givenopt}{\rnw@gopt@force}=\z@\relax\rnw@doknittrue\@dlog[2]{Focing build}\else%
     % If given local option halt, it overrides the package option
     % and acts as oposite of force
-    \ifnum\pdfstrcmp{\rnw@gopt@halt}{\givenopt\relax}=\z@\rnw@doknitfalse\relax\else%
+    \ifnum\pdfstrcmp{\givenopt}{\rnw@gopt@halt}=\z@
+        \rnw@doknitfalse\relax\@dlog[2]{Halt option given. Not building.}%
+        % \else\relax%
         % If neither force or halt is given then if new, do
         % conditionals:
-        \ifrnw@opt@new%
-          % \IfFileExists{\knitOutfile}{\rnw@doknitfalse}{\rnw@doknittrue}
-        \else%
-          % If new not given, then rely on \rnw@opt@build
-          \let\ifrnw@doknit\ifrnw@opt@build\relax%
-        \fi%
+        % \ifrnw@opt@new%
+        %   % \IfFileExists{\knitOutfile}{\rnw@doknitfalse}{\rnw@doknittrue}
+        % \else%
+        %   % If new not given, then rely on \rnw@opt@build
+        %   \@dlog{No new given}
+        %   \ea\ea\let\ea\ifrnw@doknit\csname ifrnw@opt@build\endcsname\relax%
+        % \fi%
     \fi
   \fi
 \ifrnw@doknit
@@ -139,6 +193,14 @@
 \def\rnw@purge@outdir{
   \immediate\write18{rm -rf \rnw@dir@output}
   \immediate\write18{mkdir \rnw@dir@output}
+}
+
+\def\rnw@preKnit{
+\newtoks\mytoks
+\mytoks{\\}
+\def\bs{\@backslashchar}
+\def\doublebs{\bs\bs\bs\bs\bs}
+\def\fourbs{\doublebs\doublebs\doublebs}
 }
 % \rnw@execute@knitr{path/to/file.Rnw}. .Rnw can be omitted
 \providecommand\rnw@execute@knitr[2][]{%
@@ -150,7 +212,8 @@
   \ifrnw@should@knitr
     \IfFileExists{\rnw@infile@fullpath}{
       \@dlog[2]{Building \rnw@infile@fullpath\space to \rnw@dir@output/\filename@base\rnw@suffix.tex}
-      \immediate\write18{R -e 'library("knitr");knit("\rnw@dir@input/\rnw@infile@fullpath",  "\rnw@dir@output/\filename@base\rnw@suffix.tex")' &> \rnw@file@knitlog}
+      \rnw@preKnit
+      \immediate\write18{\rnw@knitCommand}
     }{\@latex@error{@@PACKAGE: Could not find file that I was asked to knit: \rnw@infile@fullpath!}{}\stop}
   \else \@dlog[2]{- Skipping knit of \rnw@infile@fullpath}
   \fi
